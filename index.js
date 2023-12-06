@@ -101,7 +101,7 @@ const scrollTillTheEnd = async (page) => {
         // Wait for the page to load results.
         await page.waitForSelector(SELECTORS.LISTING);
 
-        //await scrollTillTheEnd(page);
+        await scrollTillTheEnd(page);
 
         const finalData = await getData(page);
 
