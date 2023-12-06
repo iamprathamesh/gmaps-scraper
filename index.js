@@ -10,29 +10,42 @@ const SELECTORS = {
     LINK: '.hfpxzc',
     IMAGE: '.p0Hhde.FQ2IWe',
     NAV_BUTTONS: '.TQbB2b',
+    LIST_ITEM: '.Nv2PK.THOPZb.CpccDe', // select 'a' tag for click
+    EXPANDED_LIST_ITEM: '.bJzME.Hu9e2e.tTVLSc',
+    CATEGORY: '.DkEaL',
+    ADDRESS_ICON: 'img[src*="place"][class="Liguzb"]',
+    WEBSITE_ICON: 'img[src*="public"][class="Liguzb"]',
+    PHONE_ICON: 'img[src*="phone"][class="Liguzb"]',
+    CLOSE: '.VfPpkd-icon-LgbsSe.yHy1rc.eT1oJ.mN1ivc'
 };
 
 // Scrapes the data from the page
-const getData = async (page, currentPageNum) => {
-    return await page.evaluate((opts) => {
-        const { selectors: SELECTORS } = opts;
-
-        const elements = document.querySelectorAll(SELECTORS.LISTING);
-        const placesElements = Array.from(elements).map(element => element.parentElement);
-
-        const places = placesElements.map((place, index) => {
-            // Getting the names
-            const name = (place.querySelector(SELECTORS.NAME)?.textContent || '').trim();
-            const rating = (place.querySelector(SELECTORS.RATINGS)?.textContent || '').trim();
-            const price = (place.querySelector(SELECTORS.PRICE)?.textContent || '').trim();
-            const link = (place.querySelector(SELECTORS.LINK)?.href || '');
-            const image = (place.querySelector(SELECTORS.IMAGE)?.children[0].src || '');
-
-            return { name, rating, price, link, image };
-        })
-
-        return places;
-    }, { selectors: SELECTORS, currentPageNum });
+const getData = async (page) => {
+    const result = [];
+    const listItems = await page.$$(SELECTORS.LIST_ITEM + ' > a');
+    for (const listItem of listItems) {
+        await listItem.click();
+        await page.waitForSelector(SELECTORS.EXPANDED_LIST_ITEM);
+        await page.waitForTimeout(2000);
+        const data = await page.evaluate((opts) => {
+            const { selectors: SELECTORS } = opts;
+            return {
+                name: (document.querySelector(SELECTORS.NAME)?.textContent || '').trim(),
+                rating: (document.querySelector(SELECTORS.RATINGS)?.textContent || '').trim(),
+                category: (document.querySelector(SELECTORS.CATEGORY)?.textContent || '').trim(),
+                address: (document.querySelectorAll(SELECTORS.ADDRESS_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
+                website: (document.querySelectorAll(SELECTORS.WEBSITE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
+                phone: (document.querySelectorAll(SELECTORS.PHONE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
+                price: (document.querySelector(SELECTORS.PRICE)?.textContent || '').trim(),
+                link: (document.querySelector(SELECTORS.LINK)?.href || ''),
+                image: (document.querySelector(SELECTORS.IMAGE)?.children[0].src || '')
+            };
+        }, { selectors: SELECTORS });
+        result.push(data);
+        await page.click(SELECTORS.CLOSE);
+        await page.waitForTimeout(500);
+    }
+    return result;
 }
 
 // Scrolls till the end of the page
@@ -64,45 +77,6 @@ const scrollTillTheEnd = async (page) => {
     } while (endOfPage);
 }
 
-// Emulates pagination
-const nextPage = async (page, currentPageNum) => {
-    const endReached = await page.evaluate(async (opts) => {
-        return new Promise(async (resolve) => {
-            const { SELECTORS, currentPageNum, MAX_PAGE_COUNT } = opts;
-            const navButtons = document.querySelectorAll(SELECTORS.NAV_BUTTONS);
-            // const preButton = navButtons[0].parentElement;
-            const nextButton = navButtons[1].parentElement;
-
-            if (nextButton.disabled) {
-                return resolve(true);
-            }
-
-            // This is our on purpose condition, just for the sake of this article
-            if (currentPageNum === MAX_PAGE_COUNT) {
-                return resolve(true);
-            }
-
-            nextButton.click();
-            return resolve(false);
-        });
-    }, { SELECTORS, currentPageNum, MAX_PAGE_COUNT });
-
-    if (endReached) {
-        return false;
-    }
-
-    try {
-        await page.waitForTimeout(3000);
-    } catch (error) {
-        // Ignoring this error
-        console.log(error);
-    }
-
-    return true;
-}
-
-
-
 (async () => {
     try {
         browser = await puppeteer.launch({ headless: false });;
@@ -127,29 +101,9 @@ const nextPage = async (page, currentPageNum) => {
         // Wait for the page to load results.
         await page.waitForSelector(SELECTORS.LISTING);
 
-        let finalData = [];
-        let currentPageNum = 0;
+        //await scrollTillTheEnd(page);
 
-        // modified this to false for only 1 page result
-        let moreAvailable = false;
-
-        do {
-            await scrollTillTheEnd(page);
-
-            const pageData = await getData(page, currentPageNum);
-
-            if (pageData.length === 0) {
-                moreAvailable = false;
-            }
-
-            finalData = finalData.concat(pageData);
-
-            if (moreAvailable) {
-                currentPageNum = currentPageNum + 1;
-                moreAvailable = await nextPage(page, currentPageNum);
-            }
-
-        } while (moreAvailable);
+        const finalData = await getData(page);
 
         fs.writeFileSync("final.json", JSON.stringify(finalData));
         console.log("Final data", finalData.length);
