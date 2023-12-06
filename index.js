@@ -3,9 +3,9 @@ const fs = require("fs");
 
 // These are class names of some of the specific elements in these cards
 const SELECTORS = {
-    NAME: '.qBF1Pd.fontHeadlineSmall',
+    NAME: '.DUwDvf.lfPIob',
     LISTING: 'a[href^="https://www.google.com/maps/place/',
-    RATINGS: '.ZkP5Je',
+    RATINGS: '.F7nice',
     PRICE: '.wcldff.fontHeadlineSmall.Cbys4b',
     LINK: '.hfpxzc',
     IMAGE: '.p0Hhde.FQ2IWe',
@@ -30,15 +30,15 @@ const getData = async (page) => {
         const data = await page.evaluate((opts) => {
             const { selectors: SELECTORS } = opts;
             return {
-                name: (document.querySelector(SELECTORS.NAME)?.textContent || '').trim(),
-                rating: (document.querySelector(SELECTORS.RATINGS)?.textContent || '').trim(),
-                category: (document.querySelector(SELECTORS.CATEGORY)?.textContent || '').trim(),
+                name: (document.querySelectorAll(SELECTORS.NAME)[0]?.textContent || '').trim(),
+                rating: (document.querySelectorAll(SELECTORS.RATINGS)[0]?.textContent || '').trim(),
+                category: (document.querySelectorAll(SELECTORS.CATEGORY)[0]?.textContent || '').trim(),
                 address: (document.querySelectorAll(SELECTORS.ADDRESS_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
                 website: (document.querySelectorAll(SELECTORS.WEBSITE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
                 phone: (document.querySelectorAll(SELECTORS.PHONE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
-                price: (document.querySelector(SELECTORS.PRICE)?.textContent || '').trim(),
-                link: (document.querySelector(SELECTORS.LINK)?.href || ''),
-                image: (document.querySelector(SELECTORS.IMAGE)?.children[0].src || '')
+                //price: (document.querySelectorAll(SELECTORS.PRICE)[0]?.textContent || '').trim(),
+                //link: (document.querySelectorAll(SELECTORS.LINK)[0]?.href || ''),
+                //image: (document.querySelectorAll(SELECTORS.IMAGE)[0]?.children[0].src || '')
             };
         }, { selectors: SELECTORS });
         result.push(data);
@@ -94,7 +94,7 @@ const scrollTillTheEnd = async (page) => {
         await page.click('#searchboxinput');
 
         // Type our search query
-        await page.type('#searchboxinput', "Hotels in dublin, Ireland");
+        await page.type('#searchboxinput', "salons in nashville");
         // Simulate pressing Enter key
         await page.keyboard.press('Enter');
 
