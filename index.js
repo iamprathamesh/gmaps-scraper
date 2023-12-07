@@ -23,12 +23,13 @@ const SELECTORS = {
 const getData = async (page) => {
     const result = [];
     const listItems = await page.$$(SELECTORS.LIST_ITEM + ' > a');
+    let index = 0;
     for (const listItem of listItems) {
         await listItem.click();
         await page.waitForSelector(SELECTORS.EXPANDED_LIST_ITEM);
         await page.waitForTimeout(2000);
         const data = await page.evaluate((opts) => {
-            const { selectors: SELECTORS } = opts;
+            const { selectors: SELECTORS, index } = opts;
             return {
                 name: (document.querySelectorAll(SELECTORS.NAME)[0]?.textContent || '').trim(),
                 rating: (document.querySelectorAll(SELECTORS.RATINGS)[0]?.textContent || '').trim(),
@@ -37,10 +38,11 @@ const getData = async (page) => {
                 website: (document.querySelectorAll(SELECTORS.WEBSITE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
                 phone: (document.querySelectorAll(SELECTORS.PHONE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
                 //price: (document.querySelectorAll(SELECTORS.PRICE)[0]?.textContent || '').trim(),
-                //link: (document.querySelectorAll(SELECTORS.LINK)[0]?.href || ''),
+                link: (document.querySelectorAll(SELECTORS.LINK)[index]?.href || ''),
                 //image: (document.querySelectorAll(SELECTORS.IMAGE)[0]?.children[0].src || '')
             };
-        }, { selectors: SELECTORS });
+        }, { selectors: SELECTORS, index });
+        index++;
         result.push(data);
         await page.click(SELECTORS.CLOSE);
         await page.waitForTimeout(500);
@@ -94,7 +96,7 @@ const scrollTillTheEnd = async (page) => {
         await page.click('#searchboxinput');
 
         // Type our search query
-        await page.type('#searchboxinput', "salons in nashville");
+        await page.type('#searchboxinput', "marriage resorts near pune nagar highway");
         // Simulate pressing Enter key
         await page.keyboard.press('Enter');
 
