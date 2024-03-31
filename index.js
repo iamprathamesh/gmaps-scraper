@@ -30,13 +30,21 @@ const getData = async (page) => {
         await page.waitForTimeout(2000);
         const data = await page.evaluate((opts) => {
             const { selectors: SELECTORS, index } = opts;
+
+            const allMetdaDivs = document.querySelectorAll('div.Io6YTe.fontBodyMedium.kR99db');
+            let data = "";
+            for (let item of allMetdaDivs) {
+                data += item.textContent + " || ";
+            }
+
             return {
                 name: (document.querySelectorAll(SELECTORS.NAME)[0]?.textContent || '').trim(),
                 rating: (document.querySelectorAll(SELECTORS.RATINGS)[0]?.textContent || '').trim(),
                 category: (document.querySelectorAll(SELECTORS.CATEGORY)[0]?.textContent || '').trim(),
-                address: (document.querySelectorAll(SELECTORS.ADDRESS_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
-                website: (document.querySelectorAll(SELECTORS.WEBSITE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
-                phone: (document.querySelectorAll(SELECTORS.PHONE_ICON)[0]?.parentNode.parentNode.nextSibling.querySelector('.Io6YTe.fontBodyMedium.kR99db').textContent || ''),
+                metaData: data,
+                // address: (document.querySelectorAll(SELECTORS.ADDRESS_ICON)[0]?.parentNode.parentNode.nextSibling?.querySelector('.Io6YTe.fontBodyMedium.kR99db')?.textContent || ''),
+                // website: (document.querySelectorAll(SELECTORS.WEBSITE_ICON)[0]?.parentNode.parentNode.nextSibling?.querySelector('.Io6YTe.fontBodyMedium.kR99db')?.textContent || ''),
+                // phone: (document.querySelectorAll(SELECTORS.PHONE_ICON)[0]?.parentNode.parentNode.nextSibling?.querySelector('.Io6YTe.fontBodyMedium.kR99db')?.textContent || ''),
                 //price: (document.querySelectorAll(SELECTORS.PRICE)[0]?.textContent || '').trim(),
                 link: (document.querySelectorAll(SELECTORS.LINK)[index]?.href || ''),
                 //image: (document.querySelectorAll(SELECTORS.IMAGE)[0]?.children[0].src || '')
@@ -96,7 +104,7 @@ const scrollTillTheEnd = async (page) => {
         await page.click('#searchboxinput');
 
         // Type our search query
-        await page.type('#searchboxinput', "marriage resorts near pune nagar highway");
+        await page.type('#searchboxinput', "Salons in nashville");
         // Simulate pressing Enter key
         await page.keyboard.press('Enter');
 
